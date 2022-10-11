@@ -38,8 +38,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<class UGSGGameplayAbility>> DefaultAbilities;
 
+	bool bASCInputBound=false;
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	virtual void OnRep_PlayerState() override;
+
+	void BindASCInput();
 protected:
 
 	/** Called for forwards/backward input */

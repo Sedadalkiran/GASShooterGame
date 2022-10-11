@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GASShooterGameCharacter.h"
+
+#include "EnhancedInputComponent.h"
 #include "Ability/GSGGameplayAbility.h"
 #include "EnhancedInputSubsystems.h"
 #include "Ability/GSGAbilitySystemComponent.h"
@@ -62,6 +64,7 @@ AGASShooterGameCharacter::AGASShooterGameCharacter()
 
 void AGASShooterGameCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
+
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 
@@ -79,6 +82,31 @@ void AGASShooterGameCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AGASShooterGameCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AGASShooterGameCharacter::TouchStopped);
+	BindASCInput();
+}
+
+void AGASShooterGameCharacter::BindASCInput()
+{
+	if (!IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	if (!bASCInputBound && InputComponent)
+	{
+		if (UEnhancedInputComponent* PlayerEnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		{
+			for (auto& Spec : AbilitySystemComponent->GetActivatableAbilities())
+			{
+				if (UGSGGameplayAbility* PlayerAbility = Cast<UGSGGameplayAbility>(Spec.Ability))
+				{
+					PlayerEnhancedInputComponent->BindAction<UGSGAbilitySystemComponent>(PlayerAbility->InputAction, ETriggerEvent::Triggered, AbilitySystemComponent, &UGSGAbilitySystemComponent::EnhancedInputAction);
+				}
+			}
+		}
+
+		bASCInputBound = true;
+	}
 }
 
 void AGASShooterGameCharacter::PawnClientRestart()
@@ -153,6 +181,19 @@ void AGASShooterGameCharacter::LookUpAtRate(float Rate)
 UAbilitySystemComponent* AGASShooterGameCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void AGASShooterGameCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	if (IsValid(AbilitySystemComponent))
+	{
+		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
+		BindASCInput();
+	}
 }
 
 void AGASShooterGameCharacter::MoveForward(float Value)
