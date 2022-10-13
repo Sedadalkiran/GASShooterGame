@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GASShooterGameGameMode.h"
+
+#include "AbilitySystemGlobals.h"
 #include "GASShooterGameCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -12,4 +14,10 @@ AGASShooterGameGameMode::AGASShooterGameGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+}
+
+void AGASShooterGameGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	UAbilitySystemGlobals::Get().InitGlobalData();
 }

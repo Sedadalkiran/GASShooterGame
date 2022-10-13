@@ -20,9 +20,4 @@ public:
 
 	UGSGGameplayAbility();
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	class UInputAction* InputAction;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Ability")
-	bool bActivateOnInput = true;
 };

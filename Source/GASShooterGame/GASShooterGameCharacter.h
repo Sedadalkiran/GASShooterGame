@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
+#include "InputAction.h"
+#include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "GASShooterGameCharacter.generated.h"
 
@@ -34,6 +37,18 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class UInputMappingContext* InputMappingContext;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* FireInputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* JumpInputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag FireEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag JumpEventTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<class UGSGGameplayAbility>> DefaultAbilities;
@@ -86,6 +101,13 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	
+	UFUNCTION(BlueprintCallable)
+	void Fire();
+
+	UFUNCTION()
+	void FireAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void JumpAction(const FInputActionValue& Value);
 };
 

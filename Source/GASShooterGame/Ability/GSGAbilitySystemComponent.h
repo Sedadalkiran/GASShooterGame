@@ -17,11 +17,6 @@ class GASSHOOTERGAME_API UGSGAbilitySystemComponent : public UAbilitySystemCompo
 public:
 	// Sets default values for this component's properties
 	UGSGAbilitySystemComponent();
-	void EnhancedInputAction(const FInputActionInstance& ActionInstace);
-	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
-protected:
 	
-
-public:
 	bool bCharacterAbilitiesGiven = false;
 };

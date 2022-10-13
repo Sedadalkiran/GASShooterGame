@@ -2,6 +2,7 @@
 
 #include "GASShooterGameCharacter.h"
 
+#include "BlendSpaceAnalysis.h"
 #include "EnhancedInputComponent.h"
 #include "Ability/GSGGameplayAbility.h"
 #include "EnhancedInputSubsystems.h"
@@ -87,25 +88,20 @@ void AGASShooterGameCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 void AGASShooterGameCharacter::BindASCInput()
 {
-	if (!IsValid(AbilitySystemComponent))
+	if (UEnhancedInputComponent* PlayerEnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
-		return;
-	}
+		// There are ways to bind a UInputAction* to a handler function and multiple types of ETriggerEvent that may be of interest.
 
-	if (!bASCInputBound && InputComponent)
-	{
-		if (UEnhancedInputComponent* PlayerEnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		// This calls the handler function on the tick when MyInputAction starts, such as when pressing an action button.
+		if (FireInputAction)
 		{
-			for (auto& Spec : AbilitySystemComponent->GetActivatableAbilities())
-			{
-				if (UGSGGameplayAbility* PlayerAbility = Cast<UGSGGameplayAbility>(Spec.Ability))
-				{
-					PlayerEnhancedInputComponent->BindAction<UGSGAbilitySystemComponent>(PlayerAbility->InputAction, ETriggerEvent::Triggered, AbilitySystemComponent, &UGSGAbilitySystemComponent::EnhancedInputAction);
-				}
-			}
+			PlayerEnhancedInputComponent->BindAction(FireInputAction, ETriggerEvent::Triggered, this, &AGASShooterGameCharacter::FireAction);
 		}
-
-		bASCInputBound = true;
+		if (JumpInputAction)
+		{
+			PlayerEnhancedInputComponent->BindAction(JumpInputAction, ETriggerEvent::Triggered, this, &AGASShooterGameCharacter::JumpAction);
+		}
+		
 	}
 }
 
@@ -154,6 +150,39 @@ void AGASShooterGameCharacter::BeginPlay()
 		AddCharacterAbilities();
 	}
 	
+}
+
+void AGASShooterGameCharacter::Fire()
+{
+	FHitResult Hit;
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	GetActorEyesViewPoint(EyeLocation,EyeRotation);
+	FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
+	GetWorld()->LineTraceSingleByChannel(Hit,EyeLocation,TraceEnd,ECC_Visibility);
+	
+}
+
+void AGASShooterGameCharacter::FireAction(const FInputActionValue& Value)
+{
+	if(AbilitySystemComponent)
+	{
+		FGameplayEventData Payload;
+		Payload.Target = this;
+		Payload.EventMagnitude = Value.GetMagnitude();
+		AbilitySystemComponent->HandleGameplayEvent(FireEventTag, &Payload);
+	}
+}
+
+void AGASShooterGameCharacter::JumpAction(const FInputActionValue& Value)
+{
+	if(AbilitySystemComponent)
+	{
+		FGameplayEventData Payload;
+		Payload.Target = this;
+		Payload.EventMagnitude = Value.GetMagnitude();
+		AbilitySystemComponent->HandleGameplayEvent(JumpEventTag, &Payload);
+	}
 }
 
 void AGASShooterGameCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)

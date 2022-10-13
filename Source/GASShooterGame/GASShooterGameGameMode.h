@@ -13,6 +13,8 @@ class AGASShooterGameGameMode : public AGameModeBase
 
 public:
 	AGASShooterGameGameMode();
+
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 };
 
 
