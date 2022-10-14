@@ -51,6 +51,9 @@ AGASShooterGameCharacter::AGASShooterGameCharacter()
 	//Create Ability System Component
 	AbilitySystemComponent=CreateDefaultSubobject<UGSGAbilitySystemComponent>(TEXT("AbilityComponent"));
 
+	//Create AttributeSet
+	AttributeSet=CreateDefaultSubobject<UGSGAttributeSet>(TEXT("AttributeSet"));
+	
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -148,8 +151,27 @@ void AGASShooterGameCharacter::BeginPlay()
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
 		AddCharacterAbilities();
+		InitializeAttributes();
 	}
 	
+}
+
+void AGASShooterGameCharacter::InitializeAttributes()
+{
+	if (!IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	if (!DefaultAttributes)
+	{
+		return;
+	}
+
+	// Can run on Server and Client
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+	AbilitySystemComponent->ApplyGameplayEffectToSelf(DefaultAttributes.GetDefaultObject(), 1, EffectContext);
 }
 
 void AGASShooterGameCharacter::Fire()
@@ -207,6 +229,20 @@ void AGASShooterGameCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
 }
 
+void AGASShooterGameCharacter::OnDeath(float Damage)
+{
+	if (AbilitySystemComponent)
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = DeathTag;
+		Payload.Target = AbilitySystemComponent->GetAvatarActor();
+		Payload.EventMagnitude = Damage;
+
+		FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+		AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
+	}
+}
+
 UAbilitySystemComponent* AGASShooterGameCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -222,6 +258,7 @@ void AGASShooterGameCharacter::OnRep_PlayerState()
 
 		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
 		BindASCInput();
+		InitializeAttributes();
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "Ability/GSGAttributeSet.h"
 #include "GameFramework/Character.h"
 #include "GASShooterGameCharacter.generated.h"
 
@@ -50,10 +51,21 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag JumpEventTag;
 
+	UPROPERTY()
+	UGSGAttributeSet* AttributeSet;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<class UGSGGameplayAbility>> DefaultAbilities;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	TSubclassOf<class UGameplayEffect> DefaultAttributes;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	FGameplayTag DeathTag;
+	
 	bool bASCInputBound=false;
+
+	void OnDeath(float Damage);
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -94,13 +106,18 @@ protected:
 	//
 	void AddCharacterAbilities();
 
+	void InitializeAttributes();
+	
 	virtual void BeginPlay() override;
+	
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	
+	
 	UFUNCTION(BlueprintCallable)
 	void Fire();
 
