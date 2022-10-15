@@ -43,7 +43,16 @@ void UGSGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			const bool bIsDead =  AbilitySystemComponent->HasMatchingGameplayTag(OwnerCharacter->DeathTag);
 			if (!bIsDead)
 			{
-				OwnerCharacter->OnDeath(Data.EvaluatedData.Magnitude);
+				if (AbilitySystemComponent)
+				{
+					FGameplayEventData Payload;
+					Payload.EventTag = OwnerCharacter->DeathTag;
+					Payload.Target = AbilitySystemComponent->GetAvatarActor();
+					Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
+
+					FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+					AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
+				}
 			}
 		}
 	}

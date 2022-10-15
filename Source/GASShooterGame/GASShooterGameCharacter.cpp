@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AGASShooterGameCharacter
@@ -108,6 +109,22 @@ void AGASShooterGameCharacter::BindASCInput()
 	}
 }
 
+void AGASShooterGameCharacter::OnRep_DeathState(bool bOldValue)
+{
+	if (AbilitySystemComponent && (!bOldValue && bDeathState))
+	{
+		// Mark ourselves as dead
+		AbilitySystemComponent->SetLooseGameplayTagCount(DeathTag, 1);
+
+		if (GetController())
+		{
+			// Disable movement on client side when dead
+			GetController()->SetIgnoreMoveInput(true);
+			GetController()->SetIgnoreLookInput(true);
+		}
+	}
+}
+
 void AGASShooterGameCharacter::PawnClientRestart()
 {
 	Super::PawnClientRestart();
@@ -172,6 +189,12 @@ void AGASShooterGameCharacter::InitializeAttributes()
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
 	AbilitySystemComponent->ApplyGameplayEffectToSelf(DefaultAttributes.GetDefaultObject(), 1, EffectContext);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UGSGAttributeSet::GetHealthAttribute()).AddUObject(this, &ThisClass::HandleHealthChanged);
+}
+
+void AGASShooterGameCharacter::HandleHealthChanged(const FOnAttributeChangeData& ChangeData)
+{
+	OnHealthChanged.Broadcast(ChangeData.OldValue,ChangeData.NewValue);
 }
 
 void AGASShooterGameCharacter::Fire()
@@ -229,18 +252,17 @@ void AGASShooterGameCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
 }
 
-void AGASShooterGameCharacter::OnDeath(float Damage)
-{
-	if (AbilitySystemComponent)
-	{
-		FGameplayEventData Payload;
-		Payload.EventTag = DeathTag;
-		Payload.Target = AbilitySystemComponent->GetAvatarActor();
-		Payload.EventMagnitude = Damage;
 
-		FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
-		AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
-	}
+void AGASShooterGameCharacter::SetDeathState_Implementation(bool bNewValue)
+{
+	bDeathState=bNewValue;
+}
+
+void AGASShooterGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGASShooterGameCharacter, bDeathState);
 }
 
 UAbilitySystemComponent* AGASShooterGameCharacter::GetAbilitySystemComponent() const

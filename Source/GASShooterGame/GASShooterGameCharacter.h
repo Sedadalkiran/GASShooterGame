@@ -11,6 +11,8 @@
 #include "GameFramework/Character.h"
 #include "GASShooterGameCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealth_AttributeChanged, float, OldValue, float, NewValue);
+
 UCLASS(config=Game)
 class AGASShooterGameCharacter : public ACharacter, public IAbilitySystemInterface
 {
@@ -32,6 +34,9 @@ class AGASShooterGameCharacter : public ACharacter, public IAbilitySystemInterfa
 public:
 	AGASShooterGameCharacter();
 
+	UPROPERTY(BlueprintAssignable)
+	FHealth_AttributeChanged OnHealthChanged;
+	
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
@@ -65,7 +70,10 @@ public:
 	
 	bool bASCInputBound=false;
 
-	void OnDeath(float Damage);
+	UFUNCTION(BlueprintCallable,Server,Reliable)
+	void SetDeathState(bool bNewValue);
+
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -73,6 +81,12 @@ public:
 
 	void BindASCInput();
 protected:
+	
+	UPROPERTY(ReplicatedUsing=OnRep_DeathState)
+	bool bDeathState=false;
+	
+	UFUNCTION()
+	void OnRep_DeathState(bool bOldValue);
 
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
@@ -109,6 +123,7 @@ protected:
 	void InitializeAttributes();
 	
 	virtual void BeginPlay() override;
+
 	
 public:
 	/** Returns CameraBoom subobject **/
@@ -116,7 +131,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	
+	virtual void HandleHealthChanged(const FOnAttributeChangeData& ChangeData);
 	
 	UFUNCTION(BlueprintCallable)
 	void Fire();
