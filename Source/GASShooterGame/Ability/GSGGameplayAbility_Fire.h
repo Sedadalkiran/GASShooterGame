@@ -13,16 +13,19 @@
 UCLASS()
 class GASSHOOTERGAME_API UGSGGameplayAbility_Fire : public UGSGGameplayAbility
 {
-	
 	GENERATED_BODY()
 public:
-	
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	                             const FGameplayAbilityActivationInfo ActivationInfo,
+	                             const FGameplayEventData* TriggerEventData) override;
 
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	                        const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
+	                        bool bWasCancelled) override;
+
 	void OnTargetDataReadyCallback(const FGameplayAbilityTargetDataHandle& InData, FGameplayTag ApplicationTag);
-	
+
+	//Called when find a target the weapon on target side.
 	UFUNCTION(BlueprintCallable)
 	void StartWeaponTargeting();
 
@@ -32,8 +35,7 @@ public:
 	// Called when target data is ready
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnWeaponTargetDataReady(const FGameplayAbilityTargetDataHandle& TargetData);
-	
-private:
 
+private:
 	FDelegateHandle OnTargetDataReadyCallbackDelegateHandle;
 };

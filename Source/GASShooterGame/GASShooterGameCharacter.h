@@ -26,17 +26,18 @@ class AGASShooterGameCharacter : public ACharacter, public IAbilitySystemInterfa
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UGSGAbilitySystemComponent* AbilitySystemComponent;
 
-	
-	
+
 public:
 	AGASShooterGameCharacter();
 
+	//VARIABLES
+
 	UPROPERTY(BlueprintAssignable)
 	FHealth_AttributeChanged OnHealthChanged;
-	
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
@@ -67,24 +68,41 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
 	FGameplayTag DeathTag;
-	
-	bool bASCInputBound=false;
 
-	UFUNCTION(BlueprintCallable,Server,Reliable)
+	bool bASCInputBound = false;
+
+
+	//FUNCTIONS
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void SetDeathState(bool bNewValue);
 
-	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
-	
+	UFUNCTION(BlueprintCallable)
+	void Fire();
+
+	//Fire input binded method
+	UFUNCTION()
+	void FireAction(const FInputActionValue& Value);
+
+	//Jump input binded method
+	UFUNCTION()
+	void JumpAction(const FInputActionValue& Value);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	virtual void OnRep_PlayerState() override;
 
 	void BindASCInput();
+
+	virtual void HandleHealthChanged(const FOnAttributeChangeData& ChangeData);
+
+
 protected:
-	
 	UPROPERTY(ReplicatedUsing=OnRep_DeathState)
-	bool bDeathState=false;
-	
+	bool bDeathState = false;
+
 	UFUNCTION()
 	void OnRep_DeathState(bool bOldValue);
 
@@ -112,7 +130,6 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
@@ -121,25 +138,13 @@ protected:
 	void AddCharacterAbilities();
 
 	void InitializeAttributes();
-	
+
 	virtual void BeginPlay() override;
 
-	
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-	virtual void HandleHealthChanged(const FOnAttributeChangeData& ChangeData);
-	
-	UFUNCTION(BlueprintCallable)
-	void Fire();
-
-	UFUNCTION()
-	void FireAction(const FInputActionValue& Value);
-
-	UFUNCTION()
-	void JumpAction(const FInputActionValue& Value);
 };
-

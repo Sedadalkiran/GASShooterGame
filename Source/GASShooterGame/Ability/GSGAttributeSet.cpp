@@ -11,7 +11,7 @@
 void UGSGAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
 	DOREPLIFETIME_CONDITION_NOTIFY(UGSGAttributeSet, Health, COND_None, REPNOTIFY_Always);
 }
 
@@ -20,27 +20,28 @@ void UGSGAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGSGAttributeSet, Health, OldHealth);
 }
 
-void UGSGAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const//Attribute değerii değişmeden önce çağrılır.
+//Called before the Attribute value changes.
+void UGSGAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
-	Super::PreAttributeBaseChange(Attribute, NewValue);//Yeni attribute değeri NewValue
+	Super::PreAttributeBaseChange(Attribute, NewValue); //New attribute value NewValue
 
-	if(Attribute==GetHealthAttribute() && NewValue<0.f)
+	if (Attribute == GetHealthAttribute() && NewValue < 0.f)
 	{
-		NewValue=0.f;
+		NewValue = 0.f;
 	}
-		
 }
 
+//Call then effect execute
 void UGSGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if(GetHealth()<=0.f)
+	if (GetHealth() <= 0.f)
 	{
 		AGASShooterGameCharacter* OwnerCharacter = Cast<AGASShooterGameCharacter>(GetOwningActor());
 		if (UAbilitySystemComponent* AbilitySystemComponent = OwnerCharacter->GetAbilitySystemComponent())
 		{
-			const bool bIsDead =  AbilitySystemComponent->HasMatchingGameplayTag(OwnerCharacter->DeathTag);
+			const bool bIsDead = AbilitySystemComponent->HasMatchingGameplayTag(OwnerCharacter->DeathTag);
 			if (!bIsDead)
 			{
 				if (AbilitySystemComponent)
@@ -56,5 +57,4 @@ void UGSGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			}
 		}
 	}
-	
 }

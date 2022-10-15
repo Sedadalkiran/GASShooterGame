@@ -90,6 +90,7 @@ void AGASShooterGameCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	BindASCInput();
 }
 
+//Binded Enhanced Input
 void AGASShooterGameCharacter::BindASCInput()
 {
 	if (UEnhancedInputComponent* PlayerEnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
@@ -109,6 +110,7 @@ void AGASShooterGameCharacter::BindASCInput()
 	}
 }
 
+//Disable movement Input after death
 void AGASShooterGameCharacter::OnRep_DeathState(bool bOldValue)
 {
 	if (AbilitySystemComponent && (!bOldValue && bDeathState))
